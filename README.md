@@ -1,6 +1,18 @@
 # Tic-Tac-Toe-2P-
 React Native Tic-Tac-Toe, with long term storage of wins
 
+# Todo
+
+* Play a sound on win/Draw
+* Settings page where people can turn off sound
+* In settings choice of colors for X and O
+* Store long term W/L/D records
+* Select existing username
+* Let ppl see leaderboard (for all users)
+* Some feature you want to add
+* About page with description of the feature you created
+
+
 # QDD
 * Store (long-term) W/L/Draw record
   * How would you save some data like that/
