@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Alert, StyleSheet, Text } from 'react-native';
+import { View, Alert, StyleSheet, Text, Button } from 'react-native';
 import Board from './components/Board';
 import GameControls from './components/GameControl';
 import PlayerInput from './components/PlayerInput';
 import Sound from 'react-native-sound';
+import DialogAndroid from 'react-native-dialogs';
 
 const App = () => {
   const [cells, setCells] = useState(Array(9).fill(null));
@@ -12,6 +13,9 @@ const App = () => {
   const [playerX, setPlayerX] = useState('');
   const [playerO, setPlayerO] = useState('');
   const [gameStarted, setGameStarted] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [colorX, setColorX] = useState('black');
+  const [colorO, setColorO] = useState('black');
 
   const startGame = (playerX, playerO) => {
     setPlayerX(playerX);
@@ -40,6 +44,7 @@ const App = () => {
   };
 
   const playSound = (soundFile) => {
+    if (!isSoundEnabled) return;
     let sound = new Sound(soundFile, Sound.MAIN_BUNDLE, (error) => {
       if (error) {
         console.log('failed to load the sound', error);
@@ -48,6 +53,10 @@ const App = () => {
       sound.play(() => sound.release());
     });
   };
+
+  const toggleSound = () => {
+    setIsSoundEnabled(!isSoundEnabled);
+  }
 
   const showAlert = (message) => {
     Alert.alert(
@@ -118,15 +127,52 @@ const App = () => {
     );
   };
 
+  const openSettings = async () => {
+    const { selectedItem } = await DialogAndroid.showPicker('Settings', null, {
+      items: [
+        { label: 'Sound ON', id: 'sound_on' },
+        { label: 'Sound OFF', id: 'sound_off' },
+        { label: 'X Color: Red', id: 'x_red' },
+        { label: 'X Color: Blue', id: 'x_blue' },
+        { label: 'O Color: Red', id: 'o_red' },
+        { label: 'O Color: Blue', id: 'o_blue' },
+      ],
+    });
+  
+    if (selectedItem) {
+      switch (selectedItem.id) {
+        case 'sound_on':
+          setIsSoundEnabled(true);
+          break;
+        case 'sound_off':
+          setIsSoundEnabled(false);
+          break;
+        case 'x_red':
+          setColorX('red');
+          break;
+        case 'x_blue':
+          setColorX('blue');
+          break;
+        case 'o_red':
+          setColorO('red');
+          break;
+        case 'o_blue':
+          setColorO('blue');
+          break;
+      }
+    }
+  };
+
   if (!gameStarted) {
     return <PlayerInput onStartGame={startGame} />;
   } else {
     return (
       <View style={styles.container}>
+        <Button title="Settings" onPress={openSettings} />
         <Text style={{...styles.currentPlayer}}>{`Current Player: ${currentPlayer}`}</Text>
         <Text style={{...styles.currentPlayer}}>{`Current Player: ${playerO}`}</Text>
         <Text style={{...styles.currentPlayer}}>{`Current Player: ${playerX}`}</Text>
-        <Board cells={cells} handleCellPress={handleCellPress} />
+        <Board cells={cells} handleCellPress={handleCellPress} colorX={colorX} colorO={colorO} />
         <GameControls handleUndo={handleUndo} handleReset={handleReset} handleResign={handleResign} />
       </View>
     );
