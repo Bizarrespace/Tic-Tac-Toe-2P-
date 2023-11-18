@@ -6,6 +6,7 @@ import PlayerInput from './components/PlayerInput';
 import Sound from 'react-native-sound';
 import DialogAndroid from 'react-native-dialogs';
 
+
 const App = () => {
   const [cells, setCells] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState('X');
@@ -53,10 +54,6 @@ const App = () => {
       sound.play(() => sound.release());
     });
   };
-
-  const toggleSound = () => {
-    setIsSoundEnabled(!isSoundEnabled);
-  }
 
   const showAlert = (message) => {
     Alert.alert(
@@ -116,6 +113,7 @@ const App = () => {
 
   const handleResign = () => {
     const winner = currentPlayer === 'X' ? 'O' : 'X';
+    playSound('win.wav')
     Alert.alert(
       "Game over",
       `Player ${winner} has won!`,
