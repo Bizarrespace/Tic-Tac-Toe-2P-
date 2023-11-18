@@ -14,13 +14,17 @@ const PlayerInput = ({ onStartGame }) => {
     <View>
       <TextInput 
         placeholder="Player X Name" 
+        placeholderTextColor="black"
         value={playerX} 
         onChangeText={setPlayerX} 
+        style={{color: 'black'}}
       />
       <TextInput 
         placeholder="Player O Name" 
+        placeholderTextColor="black"
         value={playerO} 
         onChangeText={setPlayerO} 
+        style={{color: 'black'}}
       />
       <Button title="Start Game" onPress={startGame} />
     </View>
