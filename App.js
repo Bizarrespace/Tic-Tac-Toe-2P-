@@ -3,6 +3,7 @@ import { View, Alert, StyleSheet, Text } from 'react-native';
 import Board from './components/Board';
 import GameControls from './components/GameControl';
 import PlayerInput from './components/PlayerInput';
+import Sound from 'react-native-sound';
 
 const App = () => {
   const [cells, setCells] = useState(Array(9).fill(null));
@@ -18,40 +19,52 @@ const App = () => {
     setGameStarted(true);
   };
 
-  
-
   const handleCellPress = (index) => {
+    if (cells[index] !== null) return;
+    
     const newCells = [...cells];
-    if (newCells[index] === null) {
-      newCells[index] = currentPlayer;
-      setCells(newCells);
-      setCurrentPlayer(currentPlayer === 'X' ? 'O' : 'X');
-      setHistory([...history, { cells: newCells, currentPlayer}]);
-      const winner = calculateWinner(newCells);
-        if (winner) {
-          Alert.alert(
-            "Game over",
-            `Player ${winner} has won!`,
-            [
-              { text: "OK", onPress: () => {handleReset(); 
-                setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);  } }
-            ],
-            { cancelable: false}
-          );
-        } else if (Draw(newCells)) {
-          Alert.alert (
-            "Game over",
-            "It's a draw!",
-            [
-              { text: "OK", onPress: () => {handleReset(); 
-                setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);  } }
-            ],
-            { cancelable: false}
-          );
-          
+    newCells[index] = currentPlayer;
+    
+    const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    const newHistory = [...history, { cells: newCells, currentPlayer}];
+    
+    setCells(newCells);
+    setCurrentPlayer(nextPlayer);
+    setHistory(newHistory);
+    
+    const winner = calculateWinner(newCells);
+    if (winner || Draw(newCells)) {
+      playSound(winner ? 'win.wav' : 'draw.wav');
+      showAlert(winner ? `Player ${winner} has won!` : "It's a draw!");
+    }
+  };
+
+  const playSound = (soundFile) => {
+    let sound = new Sound(soundFile, Sound.MAIN_BUNDLE, (error) => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      sound.play(() => sound.release());
+    });
+  };
+
+  const showAlert = (message) => {
+    Alert.alert(
+      "Game over",
+      message,
+      [
+        { 
+          text: "OK", 
+          onPress: () => {
+            handleReset(); 
+            setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);
+          } 
         }
-  }
-    };
+      ],
+      { cancelable: false}
+    );
+  };
 
   const handleReset = () => {
     setCells(Array(9).fill(null));
