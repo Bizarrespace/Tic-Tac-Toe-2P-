@@ -1,10 +1,11 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const Cell = ({ onPress, value }) => {
+const Cell = ({ onPress, value, colorX, colorO }) => {
+  const textColor = value === 'X' ? colorX : colorO;
   return (
     <TouchableOpacity style={styles.cell} onPress={onPress}>
-      <Text style={styles.cellText}>{value}</Text>
+      <Text style={{...styles.cellText, color : textColor}}>{value}</Text>
     </TouchableOpacity>
   );
 };

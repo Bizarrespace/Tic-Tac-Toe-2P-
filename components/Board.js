@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Cell from './Cell';
 
-const Board = ({ cells, handleCellPress }) => {
+const Board = ({ cells, handleCellPress, colorX, colorO }) => {
   return (
     <View style={styles.board}>
       {[...Array(3)].map((_, colIndex) => (
@@ -14,6 +14,8 @@ const Board = ({ cells, handleCellPress }) => {
                 key={index}
                 onPress={() => handleCellPress(index)}
                 value={cells[index]}
+                colorX = {colorX}
+                colorO = {colorO}
               />
             );
           })}
