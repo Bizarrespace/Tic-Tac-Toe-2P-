@@ -5,6 +5,7 @@ import GameControls from './GameControl';
 import PlayerInput from './PlayerInput';
 import Sound from 'react-native-sound';
 import DialogAndroid from 'react-native-dialogs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const Game = ({ navigation }) => {
@@ -18,9 +19,29 @@ const Game = ({ navigation }) => {
   const [colorX, setColorX] = useState('black');
   const [colorO, setColorO] = useState('black');
 
-  const startGame = (playerX, playerO) => {
-    setPlayerX(playerX);
-    setPlayerO(playerO);
+  const saveRecord = async (playerName, record) => {
+    try {
+      await AsyncStorage.setItem(`@record_${playerName}`, JSON.stringify(record));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const loadRecord =async (playerName) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(`@record_${playerName}`);
+      return jsonValue != null ? JSON.parse(jsonValue) : {wins: 0, losses: 0, draws: 0};
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+
+  const startGame = async (playerX, playerO) => {
+    const recordX = await loadRecord(playerX);
+    const recordO = await loadRecord(playerO);
+    setPlayerX({name: playerX, record: recordX});
+    setPlayerO({name: playerO, record: recordO});
     setGameStarted(true);
   };
 
@@ -62,9 +83,24 @@ const Game = ({ navigation }) => {
       [
         { 
           text: "OK", 
-          onPress: () => {
+          onPress: async () => {
             handleReset(); 
             setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);
+            if (message.includes('has won')) {
+              const winner = message.split(' ')[1];
+              const loser = winner === playerX.name ? playerO.name : playerX.name
+              const winnerRecord = winner === playerX.name ? playerX.record : playerO.record;
+              const lostRecord = winner === playerX.name ? playerO.record : playerX.record;
+              winnerRecord.wins += 1;
+              loserRecord.losses += 1;
+              await saveRecord(winner, winnerRecord);
+              await saveRecord(loster, loserRecord);
+            } else if (message.includes('draw')) {
+              playerX.record.draws += 1;
+              playerO.record.draws += 1;
+              await saveRecord(playerX.name, playerX.record);
+              await saveRecord(playerO.name, playerO.record);
+            }
           } 
         }
       ],
@@ -169,8 +205,8 @@ const Game = ({ navigation }) => {
         <Button title="Settings" onPress={openSettings} />
         <Button title="About" onPress={() => navigation.navigate('About')} />
         <Text style={{...styles.currentPlayer}}>{`Current Player: ${currentPlayer}`}</Text>
-        <Text style={{...styles.currentPlayer}}>{`Current Player: ${playerX}`}</Text>
-        <Text style={{...styles.currentPlayer}}>{`Current Player: ${playerO}`}</Text>
+        <Text style={{...styles.currentPlayer}}>{`Player X: ${playerX.name} (Wins: ${playerX.record.wins}, Losses: ${playerX.record.losses}, Draws: ${playerX.record.draws})`}</Text>
+        <Text style={{...styles.currentPlayer}}>{`Player O: ${playerO.name} (Wins: ${playerO.record.wins}, Losses: ${playerO.record.losses}, Draws: ${playerO.record.draws})`}</Text>
         <Board cells={cells} handleCellPress={handleCellPress} colorX={colorX} colorO={colorO} />
         <GameControls handleUndo={handleUndo} handleReset={handleReset} handleResign={handleResign} />
       </View>
