@@ -36,6 +36,13 @@ const Game = ({ navigation }) => {
     }
   }
 
+  const resetRecord = async () => {
+    try {
+      await AsyncStorage.clear();
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   const startGame = async (playerX, playerO) => {
     const recordX = await loadRecord(playerX);
@@ -149,16 +156,28 @@ const Game = ({ navigation }) => {
   }
 
   const handleResign = () => {
-    const winner = currentPlayer === 'X' ? 'O' : 'X';
-    playSound('win.wav')
+    const winner = currentPlayer === 'X' ? playerO.name : playerX.name;
+    const loser = winner === playerX.name ? playerO.name : playerX.name;
+    playSound('win.wav');
     Alert.alert(
       "Game over",
       `Player ${winner} has won!`,
       [
-        { text: "OK", onPress: () => {handleReset(); 
-          setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);  } }
+        { 
+          text: "OK", 
+          onPress: async () => {
+            handleReset(); 
+            setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);
+            const winnerRecord = winner === playerX.name ? playerX.record : playerO.record;
+            const loserRecord = winner === playerX.name ? playerO.record : playerX.record;
+            winnerRecord.wins += 1;
+            loserRecord.losses += 1;
+            await saveRecord(winner, winnerRecord);
+            await saveRecord(loser, loserRecord);
+          } 
+        }
       ],
-      { cancelable: false}
+      { cancelable: false }
     );
   };
 
@@ -171,6 +190,7 @@ const Game = ({ navigation }) => {
         { label: 'X Color: Blue', id: 'x_blue' },
         { label: 'O Color: Red', id: 'o_red' },
         { label: 'O Color: Blue', id: 'o_blue' },
+        { label: 'Reset Records', id: 'reset_records' },
       ],
     });
   
@@ -193,6 +213,9 @@ const Game = ({ navigation }) => {
           break;
         case 'o_blue':
           setColorO('blue');
+          break;
+        case 'reset_records':
+          resetRecord();
           break;
       }
     }
