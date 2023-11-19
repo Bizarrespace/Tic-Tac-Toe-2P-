@@ -5,7 +5,7 @@ React Native Tic-Tac-Toe, with long term storage of wins
 
 * ~~Settings page where people can turn off sound~~
 * ~~In settings choice of colors for X and O~~
-* Store long term W/L/D records
+* ~~Store long term W/L/D records~~
 * Select existing username
 * Let ppl see leaderboard (for all users)
 * Some feature you want to add
