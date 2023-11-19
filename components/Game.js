@@ -58,10 +58,11 @@ const Game = ({ navigation }) => {
     setCurrentPlayer(nextPlayer);
     setHistory(newHistory);
     
-    const winner = calculateWinner(newCells);
-    if (winner || Draw(newCells)) {
-      playSound(winner ? 'win.wav' : 'draw.wav');
-      showAlert(winner ? `Player ${winner} has won!` : "It's a draw!");
+    const winnerSymbol = calculateWinner(newCells);
+    if (winnerSymbol || Draw(newCells)) {
+      playSound(winnerSymbol ? 'win.wav' : 'draw.wav');
+      const winnerName = winnerSymbol === 'X' ? playerX.name : playerO.name;
+      showAlert(winnerSymbol ? `Player ${winnerName} has won!` : "It's a draw!");
     }
   };
 
@@ -90,11 +91,11 @@ const Game = ({ navigation }) => {
               const winner = message.split(' ')[1];
               const loser = winner === playerX.name ? playerO.name : playerX.name
               const winnerRecord = winner === playerX.name ? playerX.record : playerO.record;
-              const lostRecord = winner === playerX.name ? playerO.record : playerX.record;
+              const loserRecord = winner === playerX.name ? playerO.record : playerX.record;
               winnerRecord.wins += 1;
               loserRecord.losses += 1;
               await saveRecord(winner, winnerRecord);
-              await saveRecord(loster, loserRecord);
+              await saveRecord(loser, loserRecord);
             } else if (message.includes('draw')) {
               playerX.record.draws += 1;
               playerO.record.draws += 1;
