@@ -255,8 +255,8 @@ const Game = ({ navigation }) => {
         <Button title="About" onPress={() => navigation.navigate('About')} />
         <Button title="Logout" onPress={handleLogout} />
         <Text style={{...styles.currentPlayer}}>{`Current Player: ${currentPlayer}`}</Text>
-        <Text style={{...styles.currentPlayer}}>{`Player X: ${playerX.name} (Wins: ${playerX.record.wins}, Losses: ${playerX.record.losses}, Draws: ${playerX.record.draws})`}</Text>
-        <Text style={{...styles.currentPlayer}}>{`Player O: ${playerO.name} (Wins: ${playerO.record.wins}, Losses: ${playerO.record.losses}, Draws: ${playerO.record.draws})`}</Text>
+        <Text style={{...styles.currentPlayer}}>{`Player X: ${playerX.name} (W: ${playerX.record.wins}, L: ${playerX.record.losses}, D: ${playerX.record.draws})`}</Text>
+        <Text style={{...styles.currentPlayer}}>{`Player O: ${playerO.name} (W: ${playerO.record.wins}, L: ${playerO.record.losses}, D: ${playerO.record.draws})`}</Text>
         <Board cells={cells} handleCellPress={handleCellPress} colorX={colorX} colorO={colorO} />
         <GameControls handleUndo={handleUndo} handleReset={handleReset} handleResign={handleResign} />
       </View>
