@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Alert, StyleSheet, Text, Button } from 'react-native';
 import Board from './Board';
 import GameControls from './GameControl';
@@ -18,6 +18,7 @@ const Game = ({ navigation }) => {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [colorX, setColorX] = useState('black');
   const [colorO, setColorO] = useState('black');
+  const [gameEnded, setGameEnded] = useState(false);
 
   const saveRecord = async (playerName, record) => {
     try {
@@ -39,6 +40,7 @@ const Game = ({ navigation }) => {
   const resetRecord = async () => {
     try {
       await AsyncStorage.clear();
+      handleLogout();
     } catch (e) {
       console.error(e);
     }
@@ -51,6 +53,12 @@ const Game = ({ navigation }) => {
     setPlayerO({name: playerO, record: recordO});
     setGameStarted(true);
   };
+
+  const handleLogout = () => {
+    setGameStarted(false);
+    setPlayerX('');
+    setPlayerO('');
+  }
 
   const handleCellPress = (index) => {
     if (cells[index] !== null) return;
@@ -84,6 +92,19 @@ const Game = ({ navigation }) => {
     });
   };
 
+  useEffect(() => {
+    if (gameEnded) {
+      const updateRecord = async () => {
+        const recordX = await loadRecord(playerX.name);
+        const recordO = await loadRecord(playerO.name);
+        setPlayerX(prevState => ({...prevState, record: recordX}));
+        setPlayerO(prevState => ({...prevState, record: recordO}));
+      }
+      updateRecord();
+      setGameEnded(false);
+    }
+  }, [gameEnded]);
+
   const showAlert = (message) => {
     Alert.alert(
       "Game over",
@@ -103,11 +124,13 @@ const Game = ({ navigation }) => {
               loserRecord.losses += 1;
               await saveRecord(winner, winnerRecord);
               await saveRecord(loser, loserRecord);
+              setGameEnded(true);
             } else if (message.includes('draw')) {
               playerX.record.draws += 1;
               playerO.record.draws += 1;
               await saveRecord(playerX.name, playerX.record);
               await saveRecord(playerO.name, playerO.record);
+              setGameEnded(true);
             }
           } 
         }
@@ -118,6 +141,7 @@ const Game = ({ navigation }) => {
 
   const handleReset = () => {
     setCells(Array(9).fill(null));
+    setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);
     setCurrentPlayer('X');
   };
 
@@ -174,6 +198,7 @@ const Game = ({ navigation }) => {
             loserRecord.losses += 1;
             await saveRecord(winner, winnerRecord);
             await saveRecord(loser, loserRecord);
+            setGameEnded(true);
           } 
         }
       ],
@@ -228,6 +253,7 @@ const Game = ({ navigation }) => {
       <View style={styles.container}>
         <Button title="Settings" onPress={openSettings} />
         <Button title="About" onPress={() => navigation.navigate('About')} />
+        <Button title="Logout" onPress={handleLogout} />
         <Text style={{...styles.currentPlayer}}>{`Current Player: ${currentPlayer}`}</Text>
         <Text style={{...styles.currentPlayer}}>{`Player X: ${playerX.name} (Wins: ${playerX.record.wins}, Losses: ${playerX.record.losses}, Draws: ${playerX.record.draws})`}</Text>
         <Text style={{...styles.currentPlayer}}>{`Player O: ${playerO.name} (Wins: ${playerO.record.wins}, Losses: ${playerO.record.losses}, Draws: ${playerO.record.draws})`}</Text>
