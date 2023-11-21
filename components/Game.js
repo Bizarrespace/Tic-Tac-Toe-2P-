@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert, StyleSheet, Text, Button } from 'react-native';
+import { View, Alert, StyleSheet } from 'react-native';
 import Board from './Board';
 import GameControls from './GameControl';
 import PlayerInput from './PlayerInput';
 import Sound from 'react-native-sound';
 import DialogAndroid from 'react-native-dialogs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Card, Button, Text } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 
 const Game = ({ navigation }) => {
@@ -19,6 +21,11 @@ const Game = ({ navigation }) => {
   const [colorX, setColorX] = useState('black');
   const [colorO, setColorO] = useState('black');
   const [gameEnded, setGameEnded] = useState(false);
+  const [moveTimer, setMoveTimer] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(5);
+  const [firstMoveMade, setFirstMoveMade] = useState(false);
+
+
 
   const saveRecord = async (playerName, record) => {
     try {
@@ -61,7 +68,8 @@ const Game = ({ navigation }) => {
   }
 
   const handleCellPress = (index) => {
-    if (cells[index] !== null) return;
+    clearTimeout(moveTimer);
+    if (cells[index] !== null || gameEnded) return;
     
     const newCells = [...cells];
     newCells[index] = currentPlayer;
@@ -75,9 +83,17 @@ const Game = ({ navigation }) => {
     
     const winnerSymbol = calculateWinner(newCells);
     if (winnerSymbol || Draw(newCells)) {
+      clearTimeout(moveTimer); // clear the timer immediately when the game ends
       playSound(winnerSymbol ? 'win.wav' : 'draw.wav');
       const winnerName = winnerSymbol === 'X' ? playerX.name : playerO.name;
       showAlert(winnerSymbol ? `Player ${winnerName} has won!` : "It's a draw!");
+    } else {
+      const timer = setTimeout(() => handleResign(), 5000); // start a new timer
+      setMoveTimer(timer);
+      setTimeLeft(5);
+      if (!firstMoveMade) {
+        setFirstMoveMade(true);
+      }
     }
   };
 
@@ -104,6 +120,29 @@ const Game = ({ navigation }) => {
       setGameEnded(false);
     }
   }, [gameEnded]);
+
+  useEffect(() => {
+  let timer;
+  if (moveTimer && firstMoveMade) {
+    timer = setInterval(() => {
+      setTimeLeft(timeLeft => {
+        if (timeLeft > 0) {
+          return timeLeft - 1;
+        } else {
+          return 0;
+        }
+      });
+    }, 1000);
+  }
+  return () => clearInterval(timer);
+}, [moveTimer, firstMoveMade, gameEnded]);
+
+useEffect(() => {
+  if (timeLeft === 0 && !gameEnded) {
+    handleResign();
+    setTimeLeft(5);
+  }
+}, [timeLeft, gameEnded]);
 
   const showAlert = (message) => {
     Alert.alert(
@@ -137,12 +176,16 @@ const Game = ({ navigation }) => {
       ],
       { cancelable: false}
     );
+    clearTimeout(moveTimer);
+    setTimeLeft(5);
   };
 
   const handleReset = () => {
     setCells(Array(9).fill(null));
     setHistory([{cells: Array(9).fill(null), currentPlayer: 'X'}]);
     setCurrentPlayer('X');
+    setFirstMoveMade(false);
+    setTimeLeft(5);
   };
 
   const handleUndo = () => {
@@ -180,6 +223,7 @@ const Game = ({ navigation }) => {
   }
 
   const handleResign = () => {
+    if (gameEnded) return;
     const winner = currentPlayer === 'X' ? playerO.name : playerX.name;
     const loser = winner === playerX.name ? playerO.name : playerX.name;
     playSound('win.wav');
@@ -251,12 +295,52 @@ const Game = ({ navigation }) => {
   } else {
     return (
       <View style={styles.container}>
-        <Button title="Settings" onPress={openSettings} />
-        <Button title="About" onPress={() => navigation.navigate('About')} />
-        <Button title="Logout" onPress={handleLogout} />
-        <Text style={{...styles.currentPlayer}}>{`Current Player: ${currentPlayer}`}</Text>
-        <Text style={{...styles.currentPlayer}}>{`Player X: ${playerX.name} (W: ${playerX.record.wins}, L: ${playerX.record.losses}, D: ${playerX.record.draws})`}</Text>
-        <Text style={{...styles.currentPlayer}}>{`Player O: ${playerO.name} (W: ${playerO.record.wins}, L: ${playerO.record.losses}, D: ${playerO.record.draws})`}</Text>
+        <Button 
+          icon={
+            <Icon
+              name="cogs"
+              size={15}
+              color="white"
+            />
+          }
+          title="Settings"
+          buttonStyle={{ backgroundColor: 'green', borderRadius: 10 }}
+          onPress={openSettings}
+        />
+        <View style={{ height: 10 }} />
+        <Button 
+          icon={
+            <Icon
+              name="info-circle"
+              size={15}
+              color="white"
+            />
+          }
+          title="About"
+          buttonStyle={{ backgroundColor: 'blue', borderRadius: 10 }}
+          onPress={() => navigation.navigate('About')}
+        />
+        <View style={{ height: 10 }} />
+        <Button 
+          icon={
+            <Icon
+              name="sign-out"
+              size={15}
+              color="white"
+            />
+          }
+          title="Logout"
+          buttonStyle={{ backgroundColor: 'red', borderRadius: 10 }}
+          onPress={handleLogout}
+        />
+        <Card>
+          <Card.Title>Current Player: {currentPlayer}</Card.Title>
+          <Card.Divider/>
+          <Text style={styles.playerInfo}>Player X: {playerX.name} (W: {playerX.record.wins}, L: {playerX.record.losses}, D: {playerX.record.draws})</Text>
+          <Text style={styles.playerInfo}>Player O: {playerO.name} (W: {playerO.record.wins}, L: {playerO.record.losses}, D: {playerO.record.draws})</Text>
+        </Card>
+        <View style={{ height: 10 }} />
+        <Text style={styles.playerInfo}>Time Left: {timeLeft} seconds</Text>
         <Board cells={cells} handleCellPress={handleCellPress} colorX={colorX} colorO={colorO} />
         <GameControls handleUndo={handleUndo} handleReset={handleReset} handleResign={handleResign} />
       </View>
